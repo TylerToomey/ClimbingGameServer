@@ -41,9 +41,17 @@ export class ServerSocket {
       (
         roomId: string,
         username: string,
-        callback: (uid: string, users: User[], roomId: string) => void
+        callback: (
+          uid: string,
+          users: Pick<User, "userId" | "name">[],
+          roomId: string
+        ) => void
       ) => {
         log("Handshake request received", "info");
+        log(
+          `Client ${socket.id} (username: ${username}) is trying to join room ${roomId}`,
+          "info"
+        );
         let room = this.rooms[roomId];
         if (!room) {
           log(
@@ -58,15 +66,19 @@ export class ServerSocket {
         room.addUser(newUser);
         this.socketRoomMap[socket.id] = roomId;
 
-        const userSockets = room.getUsers();
-
         log("Sending callback for new handshake", "info");
-        callback(newUser.userId, userSockets, roomId);
+        callback(newUser.userId, room.getUsersClean(), roomId);
 
-        this.SendMessageToRoom("user_connected", roomId, {
-          users: room.getUsers(),
-          new_user: newUser.getClean(),
+        // Notify other users in the room about the new user
+        room.getUsers().forEach((u) => {
+          if (u.socketId !== socket.id) {
+            log(`Sending user_connected to ${u.socketId}`, "info");
+            this.io
+              .to(u.socketId)
+              .emit("user_connected", room.getUsersClean(), newUser.getClean());
+          }
         });
+        log("we reached this far...", "info");
       }
     );
 
@@ -104,16 +116,12 @@ export class ServerSocket {
   };
 
   // async to handle house-keeping tasks in the future
-  CreateRoom = async (roomId: string) => {
-    return new Promise<void>((resolve) => {
-      if (!this.rooms[roomId]) {
-        this.rooms[roomId] = new Room(roomId);
-        log(`Room ${roomId} created`, "info");
-        resolve();
-      } else {
-        log(`Room ${roomId} already exists`, "warn");
-        resolve();
-      }
+  CreateRoom = async (): Promise<string> => {
+    const roomId = await this.CreateUniqueRoomId();
+    return new Promise<string>((resolve) => {
+      this.rooms[roomId] = new Room(roomId);
+      log(`Room ${roomId} created`, "info");
+      resolve(roomId);
     });
   };
 
@@ -200,6 +208,32 @@ export class ServerSocket {
       }),
     };
   };
+
+  _GenerateRandomRoomId(): string {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let result = "";
+    for (let i = 0; i < 4; i++) {
+      result += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    return result;
+  }
+
+  CreateUniqueRoomId(): Promise<string> {
+    return new Promise<string>((resolve) => {
+      const generateUniqueRoomId = () => {
+        const roomId = this._GenerateRandomRoomId();
+        if (
+          !Object.values(this.rooms)
+            .map((room) => room.id)
+            .includes(roomId)
+        ) {
+          clearInterval(interval);
+          resolve(roomId);
+        }
+      };
+      const interval = setInterval(generateUniqueRoomId, 0);
+    });
+  }
 }
 
 type TLogLevel = "info" | "warn" | "error" | "success" | "debug";

@@ -40,12 +40,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.post("/game/create", (req: Request, res: Response) => {
-  const roomId = v4();
+app.post("/game/create", async (req: Request, res: Response) => {
   const socketInstance = ServerSocket.instance;
 
   if (socketInstance) {
-    socketInstance.CreateRoom(roomId);
+    const roomId = await socketInstance.CreateRoom();
     console.log(`Created a room with ID: ${roomId}`);
     return res.status(201).json({ roomId });
   } else {
@@ -59,11 +58,19 @@ app.post("/game/join", (req: Request, res: Response) => {
 
   if (socketInstance) {
     //socketInstance.joinRoom(roomId, userId);
-    return res
-      .status(200)
-      .json({ message: "Joined room", roomId, username: "Gleepglorp" });
-  } else {
-    return res.status(500).json({ message: "Socket instance not initialized" });
+    console.log(socketInstance.GetRooms());
+    const room = socketInstance.GetRooms().find((r) => r.id === roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+    if (room.getUsers().find((u) => u.name === username)) {
+      return res
+        .status(400)
+        .json({ message: "Username already exists in room" });
+    }
+
+    // check this logic for race condition, maybe toss this in socket
+    return res.status(200).json({ message: "success" });
   }
 });
 
