@@ -2,7 +2,7 @@ import { Server as HTTPServer } from "http";
 import { Socket, Server } from "socket.io";
 import { User, Room } from "./classes";
 import { v4 } from "uuid";
-import { dt } from "luxon";
+import { DateTime as dt } from "luxon";
 import chalk from "chalk";
 
 export class ServerSocket {
@@ -30,7 +30,7 @@ export class ServerSocket {
     console.info("socket.io is running on http://localhost:1337");
 
     // timer to sanitize rooms every 5 minutes
-    setInterval(this.sanitizeRooms, 5 * 60 * 1000);
+    setInterval(this.SanitizeRooms, 5 * 60 * 1000);
   }
 
   StartListeners = (socket: Socket) => {
@@ -104,7 +104,7 @@ export class ServerSocket {
   };
 
   // async to handle house-keeping tasks in the future
-  createRoom = async (roomId: string) => {
+  CreateRoom = async (roomId: string) => {
     return new Promise<void>((resolve) => {
       if (!this.rooms[roomId]) {
         this.rooms[roomId] = new Room(roomId);
@@ -117,7 +117,7 @@ export class ServerSocket {
     });
   };
 
-  sanitizeRooms = () => {
+  SanitizeRooms = () => {
     const now = dt.now();
     const fiveMinutes = now.minus({ minutes: 5 });
     const threeHours = now.minus({ hours: 3 });
@@ -127,7 +127,10 @@ export class ServerSocket {
       const lastActivityAt = dt.fromISO(room.lastActivityAt);
       const createdAt = dt.fromISO(room.createdAt);
 
-      if (lastActivityAt > fiveMinutes || createdAt > threeHours) {
+      if (
+        lastActivityAt.diffNow("minutes").minutes > 5 ||
+        createdAt.diffNow("hours").hours > 3
+      ) {
         log(`Closing room ${roomId} due to inactivity or age`, "info");
         this.rooms[roomId].getUsers().forEach((user) => {
           this.io.to(user.socketId).emit("room_closed");
@@ -179,6 +182,23 @@ export class ServerSocket {
         "error"
       );
     }
+  };
+
+  GetRooms = () => {
+    return Object.values(this.rooms);
+  };
+
+  GetRoomsFlattened = () => {
+    return {
+      rooms: Object.values(this.rooms).map((room: Room) => {
+        return {
+          id: room.id,
+          users: room.getUsers().map((user) => user.getClean()),
+          lastActivity: room.lastActivityAt,
+          createdAt: room.createdAt,
+        };
+      }),
+    };
   };
 }
 

@@ -45,7 +45,7 @@ app.post("/game/create", (req: Request, res: Response) => {
   const socketInstance = ServerSocket.instance;
 
   if (socketInstance) {
-    socketInstance.createRoom(roomId);
+    socketInstance.CreateRoom(roomId);
     console.log(`Created a room with ID: ${roomId}`);
     return res.status(201).json({ roomId });
   } else {
@@ -62,6 +62,16 @@ app.post("/game/join", (req: Request, res: Response) => {
     return res
       .status(200)
       .json({ message: "Joined room", roomId, username: "Gleepglorp" });
+  } else {
+    return res.status(500).json({ message: "Socket instance not initialized" });
+  }
+});
+
+app.get("/admin", (req: Request, res: Response) => {
+  const socketInstance = ServerSocket.instance;
+
+  if (socketInstance) {
+    return res.status(200).json({ rooms: socketInstance.GetRoomsFlattened() });
   } else {
     return res.status(500).json({ message: "Socket instance not initialized" });
   }

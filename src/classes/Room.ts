@@ -1,8 +1,8 @@
 import { User } from "./User";
-import { dt } from "luxon";
+import { DateTime as dt } from "luxon";
 
 export class Room {
-  private id: string;
+  public id: string;
   private users: { [userId: string]: User };
   public lastActivityAt: string;
   public createdAt: string;
