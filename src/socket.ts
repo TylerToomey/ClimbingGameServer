@@ -73,26 +73,33 @@ export class ServerSocket {
     socket.on("disconnect", () => {
       log("Client Disconnected", "warn");
       const roomId = this.socketRoomMap[socket.id];
-      if (roomId) {
-        const room = this.rooms[roomId];
-        if (room) {
-          const user = room.getUsers().find((u) => u.socketId === socket.id);
-          if (user) {
-            this.SendMessageToRoom("user_disconnected", roomId, {
-              userId: user.userId,
-            });
-            room.removeUser(user);
-          } else {
-            log(
-              `User with socket ID ${socket.id} not found in room ${roomId}`,
-              "error"
-            );
-          }
-        } else {
-          log(`Room ${roomId} not found`, "error");
-        }
-        delete this.socketRoomMap[socket.id];
+
+      if (!roomId) {
+        log(`No roomId found for socket ID ${socket.id}`, "warn");
+        return;
       }
+
+      const room = this.rooms[roomId];
+      if (!room) {
+        log(`Room ${roomId} not found`, "error");
+        return;
+      }
+
+      const user = room.getUsers().find((u) => u.socketId === socket.id);
+      if (!user) {
+        log(
+          `User with socket ID ${socket.id} not found in room ${roomId}`,
+          "error"
+        );
+        return;
+      }
+
+      this.SendMessageToRoom("user_disconnected", roomId, {
+        userId: user.userId,
+      });
+
+      room.removeUser(user);
+      delete this.socketRoomMap[socket.id];
     });
   };
 
