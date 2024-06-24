@@ -1,10 +1,11 @@
 import http from "http";
 import express from "express";
-import { RoomManager, ServerSocket } from "./managers/";
-import { v4 } from "uuid";
+import { RoomManager, ServerSocket } from "./managers";
+import { log } from "./utils/logger";
 
 const app = express();
 const httpServer = http.createServer(app);
+const roomManager = new RoomManager();
 
 new ServerSocket(httpServer);
 
@@ -27,16 +28,16 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post("/game/create", async (req, res) => {
-  const roomId = await ServerSocket.instance.createRoom();
-  res.status(201).json({ roomId });
+app.post("/game/create", async (_, res) => {
+  const room = await RoomManager.instance.createRoom();
+  res.status(201).json({ roomId: room.roomId });
 });
 
 app.post("/game/join", (req, res) => {
   const { roomId, userId } = req.body;
+  log(`User ${userId} is trying to join room ${roomId}`, "info");
   const socketInstance = ServerSocket.instance;
   if (socketInstance) {
-    socketInstance.joinRoom(roomId, userId);
     res.status(200).json({ message: "Joined room" });
   } else {
     res.status(500).json({ message: "Socket instance not initialized" });
@@ -45,9 +46,9 @@ app.post("/game/join", (req, res) => {
 
 app.get("/admin", (req, res) => {
   const socketInstance = ServerSocket.instance;
-
+  console.log(RoomManager.instance.rooms);
   if (socketInstance) {
-    return res.status(200).json({ rooms: RoomManager.getRoomsFlattened() });
+    return res.status(200).json({ rooms: RoomManager.instance.rooms });
   } else {
     return res.status(500).json({ message: "Socket instance not initialized" });
   }

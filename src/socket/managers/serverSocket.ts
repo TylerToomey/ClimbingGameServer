@@ -2,7 +2,6 @@ import { Server as HTTPServer } from "http";
 import { Server, Socket } from "socket.io";
 import { handleHandshake, handleDisconnect } from "../events/";
 import { log } from "../utils/logger";
-import { RoomManager } from "./roomManager";
 
 export class ServerSocket {
   public static instance: ServerSocket;
@@ -31,19 +30,11 @@ export class ServerSocket {
 
     socket.on(
       "handshake",
-      (roomId: string, username: string, userId: string, callback: any) => {
+      (roomId: string, username: string, callback: any) => {
         return handleHandshake(this.io, socket, roomId, username, callback);
       }
     );
 
     socket.on("disconnect", () => handleDisconnect(this.io, socket));
   };
-
-  public async createRoom(): Promise<string> {
-    return await RoomManager.createRoom();
-  }
-
-  public joinRoom(roomId: string, userId: string): void {
-    // RoomManager.joinRoom(roomId, userId);
-  }
 }

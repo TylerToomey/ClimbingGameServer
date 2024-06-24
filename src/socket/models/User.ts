@@ -1,27 +1,20 @@
-import { Room } from "./Room";
+import { ICleanUser } from "../types";
 
 export class User {
   public socketId: string;
   public userId: string;
-  public currentRoom: Room;
-  public name: string;
+  public username: string;
 
-  constructor(
-    socketId: string,
-    userId: string,
-    name: string,
-    currentRoom: Room
-  ) {
+  constructor(socketId: string, userId: string, name: string) {
     this.socketId = socketId;
     this.userId = userId;
-    this.currentRoom = currentRoom;
-    this.name = name;
+    this.username = name;
   }
 
-  public getClean(): Pick<User, "userId" | "name"> {
+  public getClean(): ICleanUser {
     return {
       userId: this.userId,
-      name: this.name,
+      username: this.username,
     };
   }
 }

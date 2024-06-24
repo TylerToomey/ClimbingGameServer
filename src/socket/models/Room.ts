@@ -1,35 +1,35 @@
-import { log } from "../utils/logger";
+import { ICleanUser } from "../types";
 import { User } from "./User";
-import { DateTime as dt } from "luxon";
 
 export class Room {
-  public id: string;
-  private users: { [userId: string]: User } = {};
-  public lastActivityAt: string;
-  public createdAt: string;
+  public roomId: string;
+  public users: User[];
 
-  constructor(id: string) {
-    this.id = id;
-    this.createdAt = dt.now().toISO();
-    this.lastActivityAt = dt.now().toISO();
+  constructor(roomId: string) {
+    this.roomId = roomId;
+    this.users = [];
   }
 
-  public addUser(user: User): void {
-    this.users[user.userId] = user;
-    this.lastActivityAt = dt.now().toISO();
-    log(`User ${user.userId} added to room ${this.id}`, "success");
+  public getUsersClean(): ICleanUser[] {
+    return this.users.map((user) => user.getClean());
   }
 
-  public removeUser(user: User): void {
-    delete this.users[user.userId];
-    this.lastActivityAt = dt.now().toISO();
+  public addUser(user: User): boolean {
+    if (this.users.find((u) => u.userId === user.userId)) {
+      return false;
+    }
+
+    this.users.push(user);
+    return true;
   }
 
-  public getUsers(): User[] {
-    return Object.values(this.users);
-  }
+  public removeUser(user: User): boolean {
+    const index = this.users.findIndex((u) => u.userId === user.userId);
+    if (index === -1) {
+      return false;
+    }
 
-  public getUsersClean(): Pick<User, "userId" | "name">[] {
-    return Object.values(this.users).map((user) => user.getClean());
+    this.users.splice(index, 1);
+    return true;
   }
 }

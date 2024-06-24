@@ -1,49 +1,51 @@
 import { Server, Socket } from "socket.io";
-import { RoomManager } from "../managers/";
 import { User } from "../models/User";
 import { log } from "../utils/logger";
 import { v4 } from "uuid";
+import { ICleanUser } from "../types";
+import { RoomManager } from "../managers";
+
+interface IHandshakeCallback {
+  (userId: string, users: ICleanUser[], roomId: string): void;
+}
 
 export const handleHandshake = (
   io: Server,
   socket: Socket,
   roomId: string,
   username: string,
-  callback: (
-    userId: string,
-    users: Pick<User, "userId" | "name">[],
-    roomId: string
-  ) => void
+  callback: IHandshakeCallback
 ): void => {
   log(
     `Client ${socket.id} (username: ${username}) is trying to join room ${roomId}`,
     "info"
   );
-  const room = RoomManager.getRoom(roomId);
+
+  log(`Creating new user ${username}`, "info");
+  const room = RoomManager.instance.getRoom(roomId);
   if (!room) {
-    log(
-      `client ${socket.id} tried to join non-existent room ${roomId}`,
-      "error"
-    );
-    socket.emit("err_room_not_found", roomId);
+    log(`Room ${roomId} not found`, "error");
     return;
   }
-  log("Creating new user", "info");
-  const newUser = new User(socket.id, v4(), username, room);
+
+  const newUser = new User(socket.id, v4(), username);
   room.addUser(newUser);
 
   log("Sending callback for new handshake", "info");
-  callback(newUser.userId, room.getUsersClean(), roomId);
 
-  room.getUsers().forEach((u) => {
-    if (u.socketId !== socket.id) {
-      log(`Sending user_connected to ${u.socketId}`, "info");
-      io.to(u.socketId).emit(
-        "user_connected",
-        newUser.getClean(),
-        room.getUsersClean()
-      );
+  // Send the user their assigned userId, the list of users in the room,
+  // and confirm the roomId they're in
+  callback(newUser.userId, room.getUsersClean(), roomId);
+  socket.join(roomId);
+
+  for (const user of room.users) {
+    if (user.userId !== newUser.userId) {
+      log(`Sending user ${newUser.username} to ${room.roomId}`, "info");
+      io.to(user.socketId).emit("user_connected", {
+        newUser: newUser.getClean(),
+        users: room.getUsersClean(),
+      });
     }
-  });
+  }
   log("Handshake completed", "info");
 };
