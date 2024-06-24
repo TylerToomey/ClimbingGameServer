@@ -36,6 +36,12 @@ app.post("/game/create", async (_, res) => {
 app.post("/game/join", (req, res) => {
   const { roomId, userId } = req.body;
   log(`User ${userId} is trying to join room ${roomId}`, "info");
+  const room = RoomManager.instance.getRoom(roomId);
+  if (!room) {
+    log(`Room ${roomId} not found`, "error");
+    return res.status(404).json({ message: "Room not found" });
+  }
+
   const socketInstance = ServerSocket.instance;
   if (socketInstance) {
     res.status(200).json({ message: "Joined room" });

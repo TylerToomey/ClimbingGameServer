@@ -14,8 +14,12 @@ export const handleHandshake = (
   socket: Socket,
   roomId: string,
   username: string,
+  userId: string,
   callback: IHandshakeCallback
 ): void => {
+  const returningUser = checkExistingUser(userId, socket, roomId, callback);
+  if (returningUser) return;
+
   log(
     `Client ${socket.id} (username: ${username}) is trying to join room ${roomId}`,
     "info"
@@ -25,6 +29,7 @@ export const handleHandshake = (
   const room = RoomManager.instance.getRoom(roomId);
   if (!room) {
     log(`Room ${roomId} not found`, "error");
+    socket.emit("room_not_found", { roomId });
     return;
   }
 
@@ -48,4 +53,32 @@ export const handleHandshake = (
     }
   }
   log("Handshake completed", "info");
+};
+
+const checkExistingUser = (
+  userId: string,
+  socket: Socket,
+  roomId: string,
+  callback: IHandshakeCallback
+): boolean => {
+  if (userId) {
+    const existingRoom = RoomManager.instance.getRoom(roomId);
+
+    if (existingRoom) {
+      const existingUser = existingRoom.disconnectedUsers.find(
+        (u) => u.userId === userId
+      );
+
+      if (existingUser) {
+        log(`User ${userId} has reconnected to room ${roomId}`, "info");
+        existingUser.socketId = socket.id;
+        existingRoom.addUser(existingUser);
+
+        callback(existingUser.userId, existingRoom.getUsersClean(), roomId);
+        socket.join(roomId);
+        return true;
+      }
+    }
+  }
+  return false;
 };

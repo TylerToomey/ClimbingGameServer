@@ -10,9 +10,10 @@ export class RoomManager {
     this.rooms = {};
   }
 
-  public getRoom(roomId: string): Room {
+  public getRoom(roomId: string): Room | null {
     if (!this.rooms[roomId]) {
       log(`Room ${roomId} does not exist`, "error");
+      return null;
     }
     return this.rooms[roomId];
   }

@@ -30,8 +30,15 @@ export class ServerSocket {
 
     socket.on(
       "handshake",
-      (roomId: string, username: string, callback: any) => {
-        return handleHandshake(this.io, socket, roomId, username, callback);
+      (roomId: string, username: string, userId: string, callback: any) => {
+        return handleHandshake(
+          this.io,
+          socket,
+          roomId,
+          username,
+          userId,
+          callback
+        );
       }
     );
 
