@@ -7,7 +7,7 @@ const app = express();
 const httpServer = http.createServer(app);
 const roomManager = new RoomManager();
 
-new ServerSocket(httpServer);
+const socketInstance = new ServerSocket(httpServer);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -42,7 +42,6 @@ app.post("/game/join", (req, res) => {
     return res.status(404).json({ message: "Room not found" });
   }
 
-  const socketInstance = ServerSocket.instance;
   if (socketInstance) {
     res.status(200).json({ message: "Joined room" });
   } else {

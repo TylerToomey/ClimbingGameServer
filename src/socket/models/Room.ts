@@ -1,4 +1,6 @@
+import { GameManager, ServerSocket } from "../managers";
 import { ICleanUser } from "../types";
+import { log } from "../utils/logger";
 import { User } from "./User";
 
 export class Room {
@@ -6,11 +8,14 @@ export class Room {
   public users: User[];
 
   public disconnectedUsers: User[];
+  private gameManager: GameManager;
 
   constructor(roomId: string) {
     this.roomId = roomId;
     this.users = [];
     this.disconnectedUsers = [];
+
+    this.gameManager = new GameManager(roomId);
   }
 
   public getUsersClean(): ICleanUser[] {
@@ -18,6 +23,7 @@ export class Room {
   }
 
   public addUser(user: User): boolean {
+    // Handle reconnect event logic
     if (this.disconnectedUsers.find((u) => u.userId === user.userId)) {
       const index = this.disconnectedUsers.findIndex(
         (u) => u.userId === user.userId
@@ -27,12 +33,16 @@ export class Room {
       return true;
     }
 
+    // Handle duplicate request to join room from active user
     if (this.users.find((u) => u.userId === user.userId)) {
       return false;
     }
 
     this.users.push(user);
-    console.log(this.users);
+    if (this.users.length > 1) {
+      this.gameManager.startGame();
+      this.broadcast("game_started", {});
+    }
     return true;
   }
 
@@ -45,5 +55,12 @@ export class Room {
     console.log(this.users);
 
     return true;
+  }
+
+  public broadcast(event: string, data: any): void {
+    for (const user of this.users) {
+      log(`Broadcasting ${event} to ${user.username} (${user.userId})`, "info");
+      ServerSocket.instance.io.to(user.socketId).emit(event, data);
+    }
   }
 }
