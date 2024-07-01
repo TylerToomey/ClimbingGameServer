@@ -49,6 +49,7 @@ export const BANNED_LOBBY_NAMES = [
   "RWU[",
 ];
 
+// goofy caesar cipher encryption and decryption
 export const encrypt = (word: string): string => {
   let encryptedWord = "";
   for (let i = 0; i < word.length; i++) {
