@@ -1,5 +1,6 @@
 import { Room } from "../models";
 import { log } from "../utils/logger";
+import { getBannedRoomCodes } from "./utils";
 
 export class RoomManager {
   public static instance: RoomManager;
@@ -60,10 +61,11 @@ export class RoomManager {
   }
 
   private generateUniqueRoomId = (): Promise<string> => {
+    const BANNED_LOBBY_NAMES = getBannedRoomCodes();
     return new Promise<string>((resolve) => {
       const generate = () => {
         const roomId = this._generateRandomRoomId();
-        if (!this.rooms[roomId]) {
+        if (!this.rooms[roomId] && !BANNED_LOBBY_NAMES.includes(roomId)) {
           clearInterval(interval);
           resolve(roomId);
         }

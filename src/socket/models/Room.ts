@@ -41,7 +41,6 @@ export class Room {
     this.users.push(user);
     if (this.users.length > 1) {
       this.gameManager.startGame();
-      this.broadcast("game_started", {});
     }
     return true;
   }
@@ -52,7 +51,6 @@ export class Room {
 
     this.disconnectedUsers.push(this.users[index]);
     this.users.splice(index, 1);
-    console.log(this.users);
 
     return true;
   }

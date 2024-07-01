@@ -6,7 +6,7 @@ import { ICleanUser } from "../types";
 import { RoomManager } from "../managers";
 
 interface IHandshakeCallback {
-  (userId: string, users: ICleanUser[], roomId: string): void;
+  (userId: string, users: ICleanUser[], roomId: string, socketId: string): void;
 }
 
 export const handleHandshake = (
@@ -40,7 +40,7 @@ export const handleHandshake = (
 
   // Send the user their assigned userId, the list of users in the room,
   // and confirm the roomId they're in
-  callback(newUser.userId, room.getUsersClean(), roomId);
+  callback(newUser.userId, room.getUsersClean(), roomId, "smell");
   socket.join(roomId);
 
   for (const user of room.users) {
@@ -74,7 +74,12 @@ const checkExistingUser = (
         existingUser.socketId = socket.id;
         existingRoom.addUser(existingUser);
 
-        callback(existingUser.userId, existingRoom.getUsersClean(), roomId);
+        callback(
+          existingUser.userId,
+          existingRoom.getUsersClean(),
+          roomId,
+          socket.id
+        );
         socket.join(roomId);
         return true;
       }

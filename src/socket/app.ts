@@ -2,6 +2,9 @@ import http from "http";
 import express from "express";
 import { RoomManager, ServerSocket } from "./managers";
 import { log } from "./utils/logger";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -51,7 +54,6 @@ app.post("/game/join", (req, res) => {
 
 app.get("/admin", (req, res) => {
   const socketInstance = ServerSocket.instance;
-  console.log(RoomManager.instance.rooms);
   if (socketInstance) {
     return res.status(200).json({ rooms: RoomManager.instance.rooms });
   } else {
