@@ -1,7 +1,8 @@
-import { Server as HTTPServer } from "http";
-import { Server, Socket } from "socket.io";
-import { handleHandshake, handleDisconnect } from "../events/";
-import { log } from "../utils/logger";
+import { Server as HTTPServer } from 'http';
+import { Server, Socket } from 'socket.io';
+
+import { handleHandshake, handleDisconnect } from '@events';
+import { log } from '@utils';
 
 export class ServerSocket {
   public static instance: ServerSocket;
@@ -14,22 +15,22 @@ export class ServerSocket {
       pingInterval: 10000,
       pingTimeout: 5000,
       cors: {
-        origin: "*",
+        origin: '*',
       },
     });
 
-    this.io.on("connect", this.startListeners);
-    console.info("socket.io is running on http://localhost:1337");
+    this.io.on('connect', this.startListeners);
+    console.info('socket.io is running on http://localhost:1337');
 
     // sanitize rooms every 5 minutes
     // setInterval(RoomManager.sanitizeRooms, 5 * 60 * 1000);
   }
 
   private startListeners = (socket: Socket) => {
-    log("Client Connected", "success");
+    log('Client Connected', 'success');
 
     socket.on(
-      "handshake",
+      'handshake',
       (roomId: string, username: string, userId: string, callback: any) => {
         return handleHandshake(
           this.io,
@@ -37,11 +38,11 @@ export class ServerSocket {
           roomId,
           username,
           userId,
-          callback
+          callback,
         );
-      }
+      },
     );
 
-    socket.on("disconnect", () => handleDisconnect(this.io, socket));
+    socket.on('disconnect', () => handleDisconnect(this.io, socket));
   };
 }

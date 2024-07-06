@@ -1,7 +1,7 @@
-import { GameManager, ServerSocket } from "../managers";
-import { ICleanUser } from "../types";
-import { log } from "../utils/logger";
-import { User } from "./User";
+import { GameManager, ServerSocket } from '@managers';
+import { log } from '@utils';
+import { type User } from '@models';
+import { type TCleanUser } from '../types';
 
 export class Room {
   public roomId: string;
@@ -18,7 +18,7 @@ export class Room {
     this.gameManager = new GameManager(roomId);
   }
 
-  public getUsersClean(): ICleanUser[] {
+  public getUsersClean(): TCleanUser[] {
     return this.users.map((user) => user.getClean());
   }
 
@@ -26,7 +26,7 @@ export class Room {
     // Handle reconnect event logic
     if (this.disconnectedUsers.find((u) => u.userId === user.userId)) {
       const index = this.disconnectedUsers.findIndex(
-        (u) => u.userId === user.userId
+        (u) => u.userId === user.userId,
       );
       this.users.push(this.disconnectedUsers[index]);
       this.disconnectedUsers.splice(index, 1);
@@ -57,7 +57,7 @@ export class Room {
 
   public broadcast(event: string, data: any): void {
     for (const user of this.users) {
-      log(`Broadcasting ${event} to ${user.username} (${user.userId})`, "info");
+      log(`Broadcasting ${event} to ${user.username} (${user.userId})`, 'info');
       ServerSocket.instance.io.to(user.socketId).emit(event, data);
     }
   }

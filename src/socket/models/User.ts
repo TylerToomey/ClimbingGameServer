@@ -1,4 +1,4 @@
-import { ICleanUser } from "../types";
+import { TCleanUser } from '../types';
 
 export class User {
   public socketId: string;
@@ -14,7 +14,7 @@ export class User {
     this.lobbyReady = false;
   }
 
-  public getClean(): ICleanUser {
+  public getClean(): TCleanUser {
     return {
       userId: this.userId,
       username: this.username,

@@ -1,1 +1,1 @@
-export * from "./blacklistedLobbies.consts";
+export * from './blacklist';

@@ -1,12 +1,12 @@
-import { Server } from "socket.io";
-import { ServerSocket } from "./serverSocket";
-import { log } from "../utils/logger";
-import { RoomManager } from "./roomManager";
+import { Server } from 'socket.io';
+import { ServerSocket } from './serverSocket';
+import { log } from '@utils';
+import { RoomManager } from './roomManager';
 
 export enum GAME_STATE {
-  LOBBY = "LOBBY",
-  IN_GAME = "IN_GAME",
-  GAME_OVER = "GAME_OVER",
+  LOBBY = 'LOBBY',
+  IN_GAME = 'IN_GAME',
+  GAME_OVER = 'GAME_OVER',
 }
 
 export class GameManager {
@@ -28,12 +28,12 @@ export class GameManager {
       `Room ${this.roomId} has started a game with ${
         RoomManager.instance.getRoom(this?.roomId)?.users.length
       } players`,
-      "info"
+      'info',
     );
   }
 
   public endGame(): void {
     this.gameState = GAME_STATE.GAME_OVER;
-    this.io.to(this.roomId).emit("game_ended");
+    this.io.to(this.roomId).emit('game_ended');
   }
 }

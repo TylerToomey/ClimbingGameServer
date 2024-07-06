@@ -1,14 +1,14 @@
-import { Server, Socket } from "socket.io";
+import { Server, Socket } from 'socket.io';
 
 export const handleHandshake = (
   io: Server,
   socket: Socket,
   roomId: string,
   username: string,
-  userId: string
+  userId: string,
 ): void => {
-  socket.on("chatMessage", (message: string) => {
-    io.to(roomId).emit("chatMessage", {
+  socket.on('chatMessage', (message: string) => {
+    io.to(roomId).emit('chatMessage', {
       username,
       message,
       from: userId,

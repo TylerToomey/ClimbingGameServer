@@ -1,4 +1,4 @@
-export interface ICleanUser {
-  userId: string;
+export type TCleanUser = {
   username: string;
-}
+  userId: string;
+};

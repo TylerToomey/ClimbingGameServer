@@ -1,6 +1,6 @@
-import { Room } from "../models";
-import { log } from "../utils/logger";
-import { getBannedRoomCodes } from "./utils";
+import { Room } from '@models';
+import { log } from '@utils';
+import { getBannedRoomCodes } from './utils';
 
 export class RoomManager {
   public static instance: RoomManager;
@@ -13,7 +13,7 @@ export class RoomManager {
 
   public getRoom(roomId: string): Room | null {
     if (!this.rooms[roomId]) {
-      log(`Room ${roomId} does not exist`, "error");
+      log(`Room ${roomId} does not exist`, 'error');
       return null;
     }
     return this.rooms[roomId];
@@ -26,13 +26,13 @@ export class RoomManager {
 
     const newRoom = new Room(roomId);
     this.rooms[roomId] = newRoom;
-    log(`Created new empty room ${roomId}`, "success");
+    log(`Created new empty room ${roomId}`, 'success');
     return newRoom;
   }
 
   public removeRoom(roomId: string): void {
     if (!this.rooms[roomId]) {
-      log(`Room ${roomId} does not exist`, "error");
+      log(`Room ${roomId} does not exist`, 'error');
     }
     delete this.rooms[roomId];
   }
@@ -51,7 +51,7 @@ export class RoomManager {
   public getUserBySocketId(socketId: string) {
     for (const roomId in this.rooms) {
       const user = this.rooms[roomId].users.find(
-        (u) => u.socketId === socketId
+        (u) => u.socketId === socketId,
       );
       if (user) {
         return user;
@@ -75,8 +75,8 @@ export class RoomManager {
   };
 
   private _generateRandomRoomId = (): string => {
-    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let result = "";
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = '';
     for (let i = 0; i < 4; i++) {
       result += letters.charAt(Math.floor(Math.random() * letters.length));
     }
